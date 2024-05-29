@@ -12,8 +12,40 @@ if (!gl) {
 
 // Vertices
 const vertexData = [
-    0.3, 0.4, 0
+
+        //FRONT
+        0.5, 0.5, 0,  //0
+        -0.5, 0.5, 0,  //1
+        -0.5, -0.5, 0,  //2
+        0.5, -0.5, 0,  //3
+
+       
+
+        //Back
+        1, 1, 1,  //6
+        0, 1, 1,  //7
+        0, 0, 1,  //8
+        1, 0, 1,  //11
+
 ];
+
+
+const colorData= [
+
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1,
+   
+
+    0, 1, 0,
+    0, 1, 0,
+    0, 1, 0,
+
+    0, 1, 0,
+   
+
+]
 
 // Buffer
 const buffer = gl.createBuffer();
@@ -22,6 +54,15 @@ if (!buffer) {
 } else {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData), gl.STATIC_DRAW);
+}
+
+// colorBuffer
+const colorBuffer = gl.createBuffer();
+if (!buffer) {
+    console.error("Failed to create buffer");
+} else {
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colorData), gl.STATIC_DRAW);
 }
 
 // Vertex shader
@@ -68,7 +109,33 @@ gl.enableVertexAttribArray(positionLocation);
 gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
 
-gl.clearColor(0, 0, 0, 0); // Set clear color
-gl.clear(gl.COLOR_BUFFER_BIT);
-gl.useProgram(program);
-gl.drawArrays(gl.POINTS, 0, 1);
+
+const colorLocation = gl.getAttribLocation(program, "color");
+gl.enableVertexAttribArray(colorLocation);
+gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
+
+const uniformLocation = gl.getUniformLocation(program, `angle`);
+
+
+
+let angle = 0;
+
+draw();
+function draw() {
+    gl.clearColor(0, 0, 0, 0); // Set clear color
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // Clear both color and depth buffer
+    gl.useProgram(program);
+     
+    angle += 0.04 
+    // Enable depth testing
+    gl.enable(gl.DEPTH_TEST);
+
+    gl.uniform1f(uniformLocation, angle);
+
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+    gl.drawArrays(gl.TRIANGLE_FAN, 4, 4);
+
+
+    window.requestAnimationFrame(draw);
+}
