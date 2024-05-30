@@ -5,6 +5,7 @@ import { fsSource } from "./shaders.js";
 const canvas = document.querySelector('canvas');
 const gl = canvas.getContext('webgl');
 
+const zoroImage = document.getElementById('zoro');
 
 if (!gl) {
     throw new Error("WebGL not supported");
