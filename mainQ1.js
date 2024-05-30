@@ -20,6 +20,7 @@ const vertexData = [
         0.5, -0.5, 0,  //3
 
        
+  
 
         //Back
         1, 1, 1,  //6
@@ -127,7 +128,7 @@ function draw() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // Clear both color and depth buffer
     gl.useProgram(program);
      
-    angle += 0.04 
+    //angle += 0.04 
     // Enable depth testing
     gl.enable(gl.DEPTH_TEST);
 
@@ -137,5 +138,5 @@ function draw() {
     gl.drawArrays(gl.TRIANGLE_FAN, 4, 4);
 
 
-    window.requestAnimationFrame(draw);
+    //window.requestAnimationFrame(draw);
 }
