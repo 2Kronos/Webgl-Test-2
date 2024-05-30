@@ -1,5 +1,5 @@
-import { vsSource } from "./shaders.js";
-import { fsSource } from "./shaders.js";
+import { vsSource } from "./shaders2(S).js";
+import { fsSource } from "./shaders2(S).js";
 
 
 const canvas = document.querySelector('canvas');
@@ -37,45 +37,57 @@ const vertexData = [
 
 ];
 
+const zoroTexCoordinate = [
+    1.0, 1.0, // Bottom right
+    0.0, 1.0, // Bottom left
+    0.0, 0.0, // Top left
+    0.0, 0.0, // Top left
+    1.0, 0.0, // Top right
+    1.0, 1.0, // Bottom right
 
-const colorData= [
 
-    0, 0, 1,
-    0, 0, 1,
-    0, 0, 1,
+    1.0, 1.0, // Bottom right
+    0.0, 1.0, // Bottom left
+    0.0, 0.0, // Top left
+    0.0, 0.0, // Top left
+    1.0, 0.0, // Top right
+    1.0, 1.0, // Bottom right
+];
 
-    0, 1, 0,
-    0, 1, 0,
-    0, 1, 0,
-
-    1, 0, 0,
-    1, 0, 0,
-    1, 0, 0,
-
-    1, 1, 0,
-    1, 1, 0,
-    1, 1, 0,
-   
-
-]
 
 // Buffer
 const buffer = gl.createBuffer();
 if (!buffer) {
-    console.error("Failed to create buffer");
+    console.error("Failed to create ZoroBuffer");
 } else {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData ), gl.STATIC_DRAW);
 }
 
-// colorBuffer
-const colorBuffer = gl.createBuffer();
+//zoro buffer
+
+const zoroBuffer = gl.createBuffer();
 if (!buffer) {
     console.error("Failed to create buffer");
 } else {
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colorData), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER,  zoroBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(zoroTexCoordinate), gl.STATIC_DRAW);
 }
+
+const shipTexture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, shipTexture);
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); // This flips the image orientation to be upright.
+
+if (isPowerOfTwo(zoroImage.width) && isPowerOfTwo(zoroImage.height)) {
+    gl.generateMipmap(gl.TEXTURE_2D);
+} else {
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+}
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, zoroImage);
+
 
 // Vertex shader
 const vertexShaderSourceCode = vsSource;
@@ -121,11 +133,14 @@ gl.enableVertexAttribArray(positionLocation);
 gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
 
+//Atttribute location of texture coordinates
+const zoroTexCoordLocation = gl.getAttribLocation(program, "ztexCoord");
+gl.enableVertexAttribArray(zoroTexCoordLocation);
+gl.bindBuffer(gl.ARRAY_BUFFER, zoroBuffer); 
+gl.vertexAttribPointer(zoroTexCoordLocation, 2, gl.FLOAT, false, 0, 0);
 
-const colorLocation = gl.getAttribLocation(program, "color");
-gl.enableVertexAttribArray(colorLocation);
-gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
+
+
 
 const uniformLocation = gl.getUniformLocation(program, `angle`);
 
@@ -151,5 +166,10 @@ function draw() {
     gl.drawArrays(gl.TRIANGLES, 9, 3);
 
 
-    //window.requestAnimationFrame(draw);
+    window.requestAnimationFrame(draw);
+}
+
+// checks if its to power of two
+function isPowerOfTwo(value) {
+    return (value & (value - 1)) === 0;
 }

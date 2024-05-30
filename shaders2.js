@@ -4,21 +4,19 @@ const vsSource = `
     precision mediump float;
     attribute vec3 pos;
 
-
-    attribute vec2 ztexCoord;
-    varying vec2 vTexCoord;
-
+    attribute vec2 zTexCoord;
+    attribute vec2 yTexCoord;
+    varying vec2 vZTexCoord;
+    varying vec2 vYTexCoord;
 
     uniform float angle;
     float x;
     float y;
     float z;
 
-
+   
 
     void main() {
-
-        vTexCoord = ztexCoord;
 
         //spin on z axis
         //x = pos.x*cos(angle)-pos.y*sin(angle);
@@ -39,7 +37,6 @@ const vsSource = `
          gl_PointSize = 40.0;
         
        
-         
 
        
     }
@@ -48,11 +45,20 @@ const vsSource = `
 const fsSource = `
 
     precision mediump float;
-    varying vec2 vTexCoord;
-    uniform sampler2D texture;
+   
+
+    varying vec2 vZTexCoord;
+    varying vec2 vYTexCoord;
+    uniform sampler2D zTexture;
+    uniform sampler2D yTexture;
+
 
     void main() {
-        gl_FragColor = texture2D(texture, vTexCoord);
+
+        vec4 zColor = texture2D(zTexture, vZTexCoord);
+        vec4 yColor = texture2D(yTexture, vYTexCoord);
+        gl_FragColor = mix(zColor, yColor, 0.5); // This will blend the two textures
+
     }
 `;
 
