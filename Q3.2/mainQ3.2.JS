@@ -1,5 +1,5 @@
-import { vsSource } from "./shaders2(S).js";
-import { fsSource } from "./shaders2(S).js";
+import { vsSource } from "./shadersQ3.js";
+import { fsSource } from "./shadersQ3.js";
 
 
 const canvas = document.querySelector('canvas');
@@ -134,9 +134,15 @@ gl.enableVertexAttribArray(zoroTexCoordLocation);
 gl.bindBuffer(gl.ARRAY_BUFFER, zoroBuffer); 
 gl.vertexAttribPointer(zoroTexCoordLocation, 2, gl.FLOAT, false, 0, 0);
 
+
+const uTranslateMatrix = gl.getUniformLocation(program, `u_TranslateMatrix`);
 const uMatrix = gl.getUniformLocation(program, 'u_Matrix')
-
-
+let translatedMatrix = [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+];
 
 function multiplyMatrices(matrixA, matrixB) {
     let result = new Array(16).fill(0);
@@ -159,9 +165,10 @@ function draw() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // Clear both color and depth buffer
     gl.useProgram(program);
 
+ 
     theta = theta + Math.PI / 500;
 
-
+   
     //Step5 make the matrix for each rotation this must be in the animation loop funciton
     const matrixX = [
         1, 0, 0, 0,
@@ -190,9 +197,10 @@ function draw() {
      
     
     gl.uniformMatrix4fv(uMatrix, false, matrixXYZ); 
+    gl.uniformMatrix4fv(uTranslateMatrix, false, translatedMatrix);
     // Enable depth testing
     gl.enable(gl.DEPTH_TEST);
-
+    
     
 
     
@@ -208,3 +216,22 @@ function draw() {
 function isPowerOfTwo(value) {
     return (value & (value - 1)) === 0;
 }
+
+document.addEventListener('keydown', function(event) {
+    switch (event.key) {
+        case "ArrowLeft":
+            translatedMatrix[12] -= 0.1;
+
+            break;
+        case "ArrowRight":
+            translatedMatrix[12] += 0.1; 
+            break;
+        case "ArrowUp":
+            translatedMatrix[13] += 0.1; 
+            break;
+        case "ArrowDown":
+            translatedMatrix[13] -= 0.1; 
+          
+            break;
+    }
+});
