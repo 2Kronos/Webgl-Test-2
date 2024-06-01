@@ -1,5 +1,5 @@
-import { vsSource } from "./shadersQ3.js";
-import { fsSource } from "./shadersQ3.js";
+import { vsSource } from "./shadersQ3.2.js";
+import { fsSource } from "./shadersQ3.2.js";
 
 
 const canvas = document.querySelector('canvas');
@@ -41,12 +41,12 @@ const zoroTexCoordinate = [
     1.0, 1.0, // Bottom right
 
 
-    1.0, 1.0, // Bottom right
-    0.0, 1.0, // Bottom left
-    0.0, 0.0, // Top left
-    0.0, 0.0, // Top left
-    1.0, 0.0, // Top right
-    1.0, 1.0, // Bottom right
+    // 1.0, 1.0, // Bottom right
+    // 0.0, 1.0, // Bottom left
+    // 0.0, 0.0, // Top left
+    // 0.0, 0.0, // Top left
+    // 1.0, 0.0, // Top right
+    // 1.0, 1.0, // Bottom right
 ];
 
 
@@ -156,7 +156,9 @@ function multiplyMatrices(matrixA, matrixB) {
     return result;
 }
 
-let theta = Math.PI / 1;
+let Xtheta = Math.PI / 1;
+let Ytheta = Math.PI / 1;
+let Ztheta = Math.PI / 1;
 
 
 draw();
@@ -164,27 +166,23 @@ function draw() {
     gl.clearColor(0, 0, 0, 0); // Set clear color
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // Clear both color and depth buffer
     gl.useProgram(program);
-
- 
-    theta = theta + Math.PI / 500;
-
-   
+     
     //Step5 make the matrix for each rotation this must be in the animation loop funciton
     const matrixX = [
         1, 0, 0, 0,
-        0, Math.cos(theta), -Math.sin(theta), 0,
-        0, Math.sin(theta), Math.cos(theta), 0,
+        0, Math.cos(Xtheta), -Math.sin(Xtheta), 0,
+        0, Math.sin(Xtheta), Math.cos(Xtheta), 0,
         0, 0, 0, 1
     ]
     const matrixY = [
-        Math.cos(theta), 0, Math.sin(theta), 0,
+        Math.cos(Ytheta), 0, Math.sin(Ytheta), 0,
         0, 1, 0, 0,
-        -Math.sin(theta), 0, Math.cos(theta), 0,
+        -Math.sin(Ytheta), 0, Math.cos(Ytheta), 0,
         0, 0, 0, 1
     ]
     const matrixZ = [
-        Math.cos(theta), -Math.sin(theta), 0, 0,
-        Math.sin(theta), Math.cos(theta), 0, 0,
+        Math.cos(Ztheta), -Math.sin(Ztheta), 0, 0,
+        Math.sin(Ztheta), Math.cos(Ztheta), 0, 0,
         0, 0, 1, 0,
         0, 0, 0, 1
     ]
@@ -206,8 +204,8 @@ function draw() {
     
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.drawArrays(gl.TRIANGLES, 3, 3);
-    gl.drawArrays(gl.TRIANGLES, 6, 3);
-    gl.drawArrays(gl.TRIANGLES, 9, 3);
+    // gl.drawArrays(gl.TRIANGLES, 6, 3);
+    // gl.drawArrays(gl.TRIANGLES, 9, 3);
 
     window.requestAnimationFrame(draw);
 }
@@ -224,13 +222,13 @@ document.addEventListener('keydown', function(event) {
 
             break;
         case "ArrowRight":
-            translatedMatrix[12] += 0.1; 
+            Ztheta += Ztheta + Math.PI / 500;
             break;
         case "ArrowUp":
-            translatedMatrix[13] += 0.1; 
+            Xtheta += Xtheta + Math.PI / 500;
             break;
         case "ArrowDown":
-            translatedMatrix[13] -= 0.1; 
+            Ytheta += Ytheta + Math.PI / 500;
           
             break;
     }
