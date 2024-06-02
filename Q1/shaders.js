@@ -21,3 +21,17 @@ const fsSource = `
     }
 `;
 export { vsSource, fsSource }
+
+function multiplyMatrices(matrixA, matrixB) {
+    let result = new Array(16).fill(0);
+    for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+            for (let k = 0; k < 4; k++) {
+                result[i * 4 + j] += matrixA[i * 4 + k] * matrixB[k * 4 + j];
+            }
+        }
+    }
+    return result;
+}
+
+snip  

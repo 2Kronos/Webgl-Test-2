@@ -1,0 +1,407 @@
+import { vsSource } from "./shadersQ3.2.js";
+import { fsSource } from "./shadersQ3.2.js";
+
+
+const canvas = document.querySelector('canvas');
+const gl = canvas.getContext('webgl');
+
+const zoroImage = document.getElementById('zoro');
+
+if (!gl) {
+    throw new Error("WebGL not supported");
+}
+
+// Vertices
+const vertexData = [
+
+   //FRONT
+   0.5, 0.5, 0,  //0
+   -0.5, 0.5, 0,  //1
+   -0.5, -0.5, 0,  //2
+   -0.5, -0.5, 0,  //3
+   0.5, -0.5, 0,  //4
+   0.5, 0.5, 0,  //5
+
+   //Back
+   1, 1, 1,  //6
+   0, 1, 1,  //7
+   0, 0, 1,  //8
+   0, 0, 1,  //9
+   1, 0, 1,  //10
+   1, 1, 1,  //11
+
+];
+
+const zoroTexCoordinate = [
+    1.0, 1.0, // Bottom right
+    0.0, 1.0, // Bottom left
+    0.0, 0.0, // Top left
+    0.0, 0.0, // Top left
+    1.0, 0.0, // Top right
+    1.0, 1.0, // Bottom right
+
+
+    1.0, 1.0, // Bottom right
+    0.0, 1.0, // Bottom left
+    0.0, 0.0, // Top left
+    0.0, 0.0, // Top left
+    1.0, 0.0, // Top right
+    1.0, 1.0, // Bottom right
+];
+
+
+// Buffer
+const buffer = gl.createBuffer();
+if (!buffer) {
+    console.error("Failed to create ZoroBuffer");
+} else {
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData ), gl.STATIC_DRAW);
+}
+
+//zoro buffer
+
+const zoroBuffer = gl.createBuffer();
+if (!buffer) {
+    console.error("Failed to create buffer");
+} else {
+    gl.bindBuffer(gl.ARRAY_BUFFER,  zoroBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(zoroTexCoordinate), gl.STATIC_DRAW);
+}
+
+const shipTexture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, shipTexture);
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); // This flips the image orientation to be upright.
+
+if (isPowerOfTwo(zoroImage.width) && isPowerOfTwo(zoroImage.height)) {
+    gl.generateMipmap(gl.TEXTURE_2D);
+} else {
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+}
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, zoroImage);
+
+
+// Vertex shader
+const vertexShaderSourceCode = vsSource;
+const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+gl.shaderSource(vertexShader, vsSource);
+gl.compileShader(vertexShader);
+
+// Error checking for vertex shader
+if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+    console.error(`Vertex shader compilation error:
+     ${gl.getShaderInfoLog(vertexShader)}
+     `);
+}
+
+// Fragment shader
+const fragmentShaderSourceCode = fsSource;
+const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+gl.shaderSource(fragmentShader, fsSource);
+gl.compileShader(fragmentShader);
+
+// Error checking for fragment shader
+if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+    console.error(`Fragment shader compilation error:
+     ${gl.getShaderInfoLog(fragmentShader)}
+     `);
+}
+
+// Program
+const program = gl.createProgram();
+gl.attachShader(program, vertexShader);
+gl.attachShader(program, fragmentShader);
+gl.linkProgram(program);
+
+// Linking error
+if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.error(`Shader program linking error:
+     ${gl.getProgramInfoLog(program)}
+     `);
+}
+
+const positionLocation = gl.getAttribLocation(program, "pos");
+gl.enableVertexAttribArray(positionLocation);
+gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
+
+//Atttribute location of texture coordinates
+const zoroTexCoordLocation = gl.getAttribLocation(program, "ztexCoord");
+gl.enableVertexAttribArray(zoroTexCoordLocation);
+gl.bindBuffer(gl.ARRAY_BUFFER, zoroBuffer); 
+gl.vertexAttribPointer(zoroTexCoordLocation, 2, gl.FLOAT, false, 0, 0);
+
+
+const uTranslateMatrix = gl.getUniformLocation(program, `u_TranslateMatrix`);
+const uMatrix = gl.getUniformLocation(program, 'u_Matrix')
+
+const perspectiveLocation = gl.getUniformLocation(program, 'u_perspective')
+    const viewLocation = gl.getUniformLocation(program, 'u_view');
+
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+
+    var perspectiveMatrixOutput = [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    ]
+
+        //NOTE: it take the identity matrix and an input and modifies it within the function
+    perspective(perspectiveMatrixOutput, 75 * Math.PI / 180, canvas.width / canvas.height, 0.1, 10000);  
+    
+    const viewMatrixOutput = [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    ]
+
+    // Its meant to place the camera at a position in x,y and z whatever that means
+    translator(viewMatrixOutput, viewMatrixOutput, [0, 0, 1]);
+    invert(viewMatrixOutput, viewMatrixOutput);
+
+let translatedMatrix = [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+];
+
+function multiplyMatrices(matrixA, matrixB) {
+    let result = new Array(16).fill(0);
+    for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+            for (let k = 0; k < 4; k++) {
+                result[i * 4 + j] += matrixA[i * 4 + k] * matrixB[k * 4 + j];
+            }
+        }
+    }
+    return result;
+}
+
+let Xtheta = Math.PI / 1;
+let Ytheta = Math.PI / 1;
+let Ztheta = Math.PI / 1;
+
+
+draw();
+function draw() {
+    gl.clearColor(0, 0, 0, 0); // Set clear color
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // Clear both color and depth buffer
+    gl.useProgram(program);
+     
+    //Step5 make the matrix for each rotation this must be in the animation loop funciton
+    const matrixX = [
+        1, 0, 0, 0,
+        0, Math.cos(Xtheta), -Math.sin(Xtheta), 0,
+        0, Math.sin(Xtheta), Math.cos(Xtheta), 0,
+        0, 0, 0, 1
+    ]
+    const matrixY = [
+        Math.cos(Ytheta), 0, Math.sin(Ytheta), 0,
+        0, 1, 0, 0,
+        -Math.sin(Ytheta), 0, Math.cos(Ytheta), 0,
+        0, 0, 0, 1
+    ]
+    const matrixZ = [
+        Math.cos(Ztheta), -Math.sin(Ztheta), 0, 0,
+        Math.sin(Ztheta), Math.cos(Ztheta), 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    ]
+
+    //Step6 use the multiplyMatrix function to multiply all your matrices together
+    var matrixXY = multiplyMatrices(matrixX, matrixY);
+    var matrixXYZ = multiplyMatrices(matrixXY, matrixZ);
+    var matrixYZ = multiplyMatrices(matrixY, matrixZ);
+    var matrixXZ = multiplyMatrices(matrixX, matrixZ);
+     
+    
+    gl.uniformMatrix4fv(uMatrix, false, matrixX); 
+    gl.uniformMatrix4fv(uMatrix, false, matrixY);
+    gl.uniformMatrix4fv(uMatrix, false, matrixZ);  
+    gl.uniformMatrix4fv(uTranslateMatrix, false, translatedMatrix);
+    gl.uniformMatrix4fv(perspectiveLocation, false, perspectiveMatrixOutput);
+    gl.uniformMatrix4fv(viewLocation, false, viewMatrixOutput);
+
+    // Enable depth testing
+    gl.enable(gl.DEPTH_TEST);
+    
+    
+
+    
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.drawArrays(gl.TRIANGLES, 3, 3);
+    gl.drawArrays(gl.TRIANGLES, 6, 3);
+    gl.drawArrays(gl.TRIANGLES, 9, 3);
+
+    window.requestAnimationFrame(draw);
+}
+
+// checks if its to power of two
+function isPowerOfTwo(value) {
+    return (value & (value - 1)) === 0;
+}
+
+document.addEventListener('keydown', function(event) {
+    switch (event.key) {
+        case "ArrowLeft":
+            translatedMatrix[12] -= 0.1;
+
+            break;
+        case "ArrowRight":
+            Ztheta += Ztheta + Math.PI / 2;
+            break;
+        case "ArrowUp":
+            Xtheta += Xtheta + Math.PI / 2;
+            break;
+        case "ArrowDown":
+            Ytheta += Ytheta + Math.PI / 2;
+          
+            break;
+    }
+});
+
+
+
+//start of perspective function
+function perspective(out, fovy, aspect, near, far) {
+    var f = 1.0 / Math.tan(fovy / 2),
+        nf;
+    out[0] = f / aspect;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = 0;
+    out[5] = f;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = 0;
+    out[9] = 0;
+    out[11] = -1;
+    out[12] = 0;
+    out[13] = 0;
+    out[15] = 0;
+
+    if (far != null && far !== Infinity) {
+      nf = 1 / (near - far);
+      out[10] = (far + near) * nf;
+      out[14] = 2 * far * near * nf;
+    } else {
+      out[10] = -1;
+      out[14] = -2 * near;
+    }
+
+    return out;
+  }//End of perspective funciton
+
+  //Start of tranlator function 
+   function translator(out, a, v) {
+    var x = v[0],
+        y = v[1],
+        z = v[2];
+    var a00, a01, a02, a03;
+    var a10, a11, a12, a13;
+    var a20, a21, a22, a23;
+
+    if (a === out) {
+      out[12] = a[0] * x + a[4] * y + a[8] * z + a[12];
+      out[13] = a[1] * x + a[5] * y + a[9] * z + a[13];
+      out[14] = a[2] * x + a[6] * y + a[10] * z + a[14];
+      out[15] = a[3] * x + a[7] * y + a[11] * z + a[15];
+    } else {
+      a00 = a[0];
+      a01 = a[1];
+      a02 = a[2];
+      a03 = a[3];
+      a10 = a[4];
+      a11 = a[5];
+      a12 = a[6];
+      a13 = a[7];
+      a20 = a[8];
+      a21 = a[9];
+      a22 = a[10];
+      a23 = a[11];
+      out[0] = a00;
+      out[1] = a01;
+      out[2] = a02;
+      out[3] = a03;
+      out[4] = a10;
+      out[5] = a11;
+      out[6] = a12;
+      out[7] = a13;
+      out[8] = a20;
+      out[9] = a21;
+      out[10] = a22;
+      out[11] = a23;
+      out[12] = a00 * x + a10 * y + a20 * z + a[12];
+      out[13] = a01 * x + a11 * y + a21 * z + a[13];
+      out[14] = a02 * x + a12 * y + a22 * z + a[14];
+      out[15] = a03 * x + a13 * y + a23 * z + a[15];
+    }
+
+    return out;
+  }//End of translator function
+
+  //Start of invert function
+  function invert(out, a) {
+    var a00 = a[0],
+        a01 = a[1],
+        a02 = a[2],
+        a03 = a[3];
+    var a10 = a[4],
+        a11 = a[5],
+        a12 = a[6],
+        a13 = a[7];
+    var a20 = a[8],
+        a21 = a[9],
+        a22 = a[10],
+        a23 = a[11];
+    var a30 = a[12],
+        a31 = a[13],
+        a32 = a[14],
+        a33 = a[15];
+    var b00 = a00 * a11 - a01 * a10;
+    var b01 = a00 * a12 - a02 * a10;
+    var b02 = a00 * a13 - a03 * a10;
+    var b03 = a01 * a12 - a02 * a11;
+    var b04 = a01 * a13 - a03 * a11;
+    var b05 = a02 * a13 - a03 * a12;
+    var b06 = a20 * a31 - a21 * a30;
+    var b07 = a20 * a32 - a22 * a30;
+    var b08 = a20 * a33 - a23 * a30;
+    var b09 = a21 * a32 - a22 * a31;
+    var b10 = a21 * a33 - a23 * a31;
+    var b11 = a22 * a33 - a23 * a32; // Calculate the determinant
+
+    var det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+
+    if (!det) {
+      return null;
+    }
+
+    det = 1.0 / det;
+    out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+    out[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+    out[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+    out[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+    out[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+    out[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+    out[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+    out[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+    out[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+    out[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+    out[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+    out[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+    out[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+    out[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+    out[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+    out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+    return out;
+  }//End of invert function
+

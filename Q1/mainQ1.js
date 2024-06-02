@@ -147,3 +147,5 @@ function draw() {
 
     window.requestAnimationFrame(draw);
 }
+
+snip
