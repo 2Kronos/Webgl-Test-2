@@ -1,5 +1,5 @@
-import { vsSource } from "./shadersQ3.2.js";
-import { fsSource } from "./shadersQ3.2.js";
+import { vsSource } from "./shadersQ3.3.js";
+import { fsSource } from "./shadersQ3.3.js";
 
 
 const canvas = document.querySelector('canvas');
@@ -138,32 +138,33 @@ gl.vertexAttribPointer(zoroTexCoordLocation, 2, gl.FLOAT, false, 0, 0);
 const uTranslateMatrix = gl.getUniformLocation(program, `u_TranslateMatrix`);
 const uMatrix = gl.getUniformLocation(program, 'u_Matrix')
 
+
 const perspectiveLocation = gl.getUniformLocation(program, 'u_perspective')
-    const viewLocation = gl.getUniformLocation(program, 'u_view');
+const viewLocation = gl.getUniformLocation(program, 'u_view');
 
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
+canvas.width = canvas.clientWidth;
+canvas.height = canvas.clientHeight;
 
-    var perspectiveMatrixOutput = [
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-    ]
+var perspectiveMatrixOutput = [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+]
 
-        //NOTE: it take the identity matrix and an input and modifies it within the function
-    perspective(perspectiveMatrixOutput, 75 * Math.PI / 180, canvas.width / canvas.height, 0.1, 10000);  
-    
-    const viewMatrixOutput = [
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-    ]
+    //NOTE: it take the identity matrix and an input and modifies it within the function
+perspective(perspectiveMatrixOutput, 75 * Math.PI / 180, canvas.width / canvas.height, 0.1, 10000);  
 
-    // Its meant to place the camera at a position in x,y and z whatever that means
-    translator(viewMatrixOutput, viewMatrixOutput, [0, 0, 1]);
-    invert(viewMatrixOutput, viewMatrixOutput);
+const viewMatrixOutput = [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+]
+
+// Its meant to place the camera at a position in x,y and z whatever that means
+translator(viewMatrixOutput, viewMatrixOutput, [0, 0, 1]);
+invert(viewMatrixOutput, viewMatrixOutput);
 
 let translatedMatrix = [
     1, 0, 0, 0,
@@ -184,9 +185,9 @@ function multiplyMatrices(matrixA, matrixB) {
     return result;
 }
 
-let Xtheta = Math.PI / 1;
-let Ytheta = Math.PI / 1;
-let Ztheta = Math.PI / 1;
+var Xtheta = 0;
+var Ytheta = 0;
+var Ztheta = 0;
 
 
 draw();
@@ -222,10 +223,9 @@ function draw() {
     var matrixXZ = multiplyMatrices(matrixX, matrixZ);
      
     
-    gl.uniformMatrix4fv(uMatrix, false, matrixX); 
-    gl.uniformMatrix4fv(uMatrix, false, matrixY);
-    gl.uniformMatrix4fv(uMatrix, false, matrixZ);  
+    gl.uniformMatrix4fv(uMatrix, false, matrixXYZ); 
     gl.uniformMatrix4fv(uTranslateMatrix, false, translatedMatrix);
+
     gl.uniformMatrix4fv(perspectiveLocation, false, perspectiveMatrixOutput);
     gl.uniformMatrix4fv(viewLocation, false, viewMatrixOutput);
 
@@ -248,25 +248,24 @@ function isPowerOfTwo(value) {
     return (value & (value - 1)) === 0;
 }
 
-document.addEventListener('keydown', function(event) {
-    switch (event.key) {
-        case "ArrowLeft":
-            translatedMatrix[12] -= 0.1;
 
-            break;
-        case "ArrowRight":
-            Ztheta += Ztheta + Math.PI / 2;
-            break;
-        case "ArrowUp":
-            Xtheta += Xtheta + Math.PI / 2;
-            break;
-        case "ArrowDown":
-            Ytheta += Ytheta + Math.PI / 2;
-          
-            break;
-    }
-});
+window.rotateX = function(){
 
+    Xtheta += 0.1;
+
+}
+
+window.rotateY = function(){
+
+    Ytheta += 0.1;
+
+}
+
+window.rotateZ= function(){
+
+    Ztheta += 0.1;
+
+}
 
 
 //start of perspective function
@@ -404,4 +403,6 @@ function perspective(out, fovy, aspect, near, far) {
     out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
     return out;
   }//End of invert function
+
+
 
